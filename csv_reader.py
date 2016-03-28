@@ -11,7 +11,7 @@ class LearningStrategy:
 		if(self.algorithm):
 			return self.algorithm.learn(data)
 
-class DeepLearning:
+class Greedy:
 	def learn(self,data):
 		return data
 
