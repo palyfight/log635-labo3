@@ -19,6 +19,12 @@ class Genetics:
 	def learn(self,data):
 		return data
 
+	class Population:
+		pass
+
+	class Individual:
+		pass
+
 class Util:
 	def readInterpretData(filename):
 		with open(filename) as file:
