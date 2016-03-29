@@ -1,5 +1,6 @@
 from Utils import Util
 import math
+import numpy as np
 
 class LearningStrategy:
 	def __init__(self, algorithm=None):
@@ -15,7 +16,20 @@ class Greedy:
 		return data
 
 class NeuralNetwork:
-	pass
+	def learn(self,data):
+		self.processData(data)
+
+	def processData(self,data):
+		self.inputData = np.array([])
+		self.ouputData = np.array([])
+		for element in data:
+			out = element.pop("G3",None)
+			self.inputData = np.append(element,self.inputData)
+			self.ouputData = np.append(out,self.ouputData)
+
+		for index in range(len(self.ouputData)):
+			print (self.inputData[index])
+			print (self.ouputData[index])
 
 class Genetics:
 	def learn(self,data):
@@ -61,15 +75,16 @@ class Genetics:
 
 def main():
 	data = Util.readInterpretData('learning_dataset.csv')
-	algo = LearningStrategy(algorithm=Genetics)
+	algo = LearningStrategy(algorithm=NeuralNetwork)
 	proc_data = algo.learn(data)
 
-	trainingSetLimit = math.floor(len(data)*0.8)
+
+	'''trainingSetLimit = math.floor(len(data)*0.8)
 
 	for index in range(len(data)):
 		print(Util.dataBitConverter(data[index]))
 
-	'''for index in range(len(data)) :
+	for index in range(len(data)) :
 		chromosome = Util.bitConverter(data[index])
 		if len(chromosome) == 80 :
 			if index <= trainingSetLimit:
