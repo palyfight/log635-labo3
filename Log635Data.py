@@ -146,4 +146,6 @@ class LOG635DATA:
 			return self.intToBits(4, 3)
 		else:
 			return self.intToBits(5, 3)
+
+	
 	

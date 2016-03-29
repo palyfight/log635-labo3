@@ -14,49 +14,50 @@ class Greedy:
 	def learn(self,data):
 		return data
 
+class NeuralNetwork:
+	pass
+
 class Genetics:
 	def learn(self,data):
 		return data
 
 	class _Population:
-		
-		def __init__(self,data):
-			pass
+		def __init__(self,chromosomes):
+			self.individuals = []
+			for element in data:
+				individual = _Individual(element)
+				self.individuals.append(individual)
 
 		def getIndividual(self,index):
-			return self.individual[index]
+			return self.individuals[index]
 
 		def getFittess(self):
-			pass
+			fittess = self.individuals[0]
+			for element in self.individuals:
+				if fittess.getFitness <= element.getFitness:
+					fittess = element
+
+			return fittess
 
 		def size(self):
-			pass
+			return len(self.individuals)
 
-		def saveIndividual(self,individual):
-			pass
+		def saveIndividual(self,index,individual):
+			self.individuals[index] = individual
 
 	class _Individual:
-		def __init__(self,data):
-			pass
+		def __init__(self,chromosome):
+			self.fitness = 0
+			self.genes = chromosome
 
-		def generateIndividual(self):
-			pass
-
-		def setDefaultGeneLength(self):
-			pass
-
-		def getGene(self):
-			pass
+		def getGene(self, index):
+			return self.genes[index]
 
 		def size(self):
-			pass
+			return len(self.genes)
 
 		def getFitness(self):
 			pass
-
-		def toString(self):
-			pass
-
 
 def main():
 	data = Util.readInterpretData('learning_dataset.csv')
@@ -65,12 +66,15 @@ def main():
 
 	trainingSetLimit = math.floor(len(data)*0.8)
 
-	for index in range(len(data)) :
+	for index in range(len(data)):
+		print(Util.dataBitConverter(data[index]))
+
+	'''for index in range(len(data)) :
 		chromosome = Util.bitConverter(data[index])
 		if len(chromosome) == 80 :
 			if index <= trainingSetLimit:
 				Util.writeToLearningFile("validation.pac", chromosome)
 			else:
-				Util.writeToLearningFile("learning.pac",chromosome)
+				Util.writeToLearningFile("learning.pac",chromosome)'''
 
 if __name__ == "__main__":main()
