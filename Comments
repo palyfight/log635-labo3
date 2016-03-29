@@ -1,0 +1,37 @@
+Comment
+
+BITS DATA REPRESENTATION
+
+school;					1 bits
+sex;					1 bits
+age;					5 bits
+address;				1 bits
+famsize;				1 bits
+Pstatus;				1 bits
+Medu;					3 bits
+Fedu;					3 bits
+Mjob;					3 bits
+Fjob;					3 bits
+reason;					2 bits
+guardian;				2 bits
+traveltime;				2 bits
+studytime;				2 bits
+failures;				2 bits
+schoolsup;				1 bits
+famsup;					1 bits 
+paid;					1 bits 
+activities;				1 bits
+nursery;				1 bits
+higher;					1 bits
+internet;				1 bits
+romantic;				1 bits
+famrel;					3 bits
+freetime;				3 bits
+goout;					3 bits
+Dalc;					3 bits
+Walc;					3 bits
+health;					3 bits
+absences;				7 bits
+G1;						5 bits
+G2;						5 bits
+G3;						5 bits
