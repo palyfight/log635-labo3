@@ -20,16 +20,28 @@ class NeuralNetwork:
 		self.processData(data)
 
 	def processData(self,data):
-		self.inputData = np.array([])
-		self.ouputData = np.array([])
+		self.inputData = np.empty((0,32),int)
+		self.outputData = np.empty((0,len(data)),int)
 		for element in data:
-			out = element.pop("G3",None)
-			self.inputData = np.append(element,self.inputData)
-			self.ouputData = np.append(out,self.ouputData)
+			out = int(element.pop("G3",None))
+			self.inputData = np.append(self.inputData, np.array([Util.interpretData(element)]), axis=0)
+			self.outputData = np.append(self.outputData,out)
 
-		for index in range(len(self.ouputData)):
-			print (self.inputData[index])
-			print (self.ouputData[index])
+		self.outputData = np.array([self.outputData]).T
+
+		#normalize input output
+		self.inputData = self.inputData/self.inputData.max(axis=0)
+		self.outputData = self.outputData/self.outputData.max(axis=0)
+
+		print(self.outputData)
+
+
+
+	def nonLinear(output,derivate=False):
+		if derivate :
+			return output*(1-output)
+		return 1/(1+np.exp(-output))
+
 
 class Genetics:
 	def learn(self,data):
