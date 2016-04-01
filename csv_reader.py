@@ -18,6 +18,18 @@ class Greedy:
 class NeuralNetwork:
 	def learn(self,data):
 		self.processData(data)
+		np.random.seed(1)
+		connection = (2*np.random.random((len(self.inputData[0]),1))) - 1
+		#print(connection)
+		
+		for i in range(10000):
+			layer0 = self.inputData
+			layer1 = self.nonLinear( np.dot(layer0,connection) )
+			layer1_errors = self.outputData - layer1
+			layer1_delta = layer1_errors * self.nonLinear(layer1,True)
+			connection += np.dot(layer0.T, layer1_delta)
+			#print(str(np.mean(np.abs(layer1_errors))))
+		#print(layer1)
 
 	def processData(self,data):
 		self.inputData = np.empty((0,32),int)
@@ -30,17 +42,29 @@ class NeuralNetwork:
 		self.outputData = np.array([self.outputData]).T
 
 		#normalize input output
+		print(self.inputData.max(axis=0))
+		print(self.inputData.min(axis=0))
 		self.inputData = self.inputData/self.inputData.max(axis=0)
 		self.outputData = self.outputData/self.outputData.max(axis=0)
-
+		print(self.inputData)
 		print(self.outputData)
+		'''self.inputData = np.array([[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+								   [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+								   [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]])
+		self.outputData = np.array([[1,0,1]]).T'''
 
-
-
-	def nonLinear(output,derivate=False):
-		if derivate :
+	def nonLinear(self,output,derivate=False):
+		#print(output)
+		'''if derivate == True:
 			return output*(1-output)
-		return 1/(1+np.exp(-output))
+		return 1/(1+np.exp(-output))'''
+		if derivate == True:
+			return (1-np.power(np.tanh(output),2))
+		return np.tanh(output)
+		'''if derivate == True:
+			return -2*output*np.exp(np.power(-output,2))
+		return np.exp(np.power(-output,2))'''
+
 
 
 class Genetics:
