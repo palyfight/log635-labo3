@@ -1,5 +1,6 @@
 from Utils import Util
 import math
+import random
 import numpy as np
 
 class LearningStrategy:
@@ -14,6 +15,36 @@ class LearningStrategy:
 class Greedy:
 	def learn(self,data):
 		return data
+
+class kNN:
+	def learn(self,data):
+		self.processData(data,0.67)
+		#print(self.trainingData[0])
+		#print(self.trainingData[1])
+		#distance = self.euclideanDistance(self.trainingData[0],self.trainingData[1],32)
+		#print("Distance: " + repr(distance))
+		#print(repr(len(self.trainingData)))
+		#print(repr(len(self.testingData)))
+
+	def processData(self,data,split):
+		self.trainingData = np.empty((0,33),int)
+		self.testingData = np.empty((0,33),int)
+
+		for element in data:
+			if random.random() < split:
+				self.trainingData = np.append(self.trainingData, np.array([Util.interpretData(element)]), axis=0)
+			else:
+				self.testingData = np.append(self.testingData, np.array([Util.interpretData(element)]), axis=0)
+
+		#print(self.trainingData)
+		#print(self.testingData)
+
+	def euclideanDistance(self,n1,n2,length):
+		distance = 0
+		for x in range(length):
+			distance += np.power((n1[x] - n2[x]),2)
+		return np.square(distance)
+
 
 class NeuralNetwork:
 	def learn(self,data):
@@ -111,7 +142,7 @@ class Genetics:
 
 def main():
 	data = Util.readInterpretData('learning_dataset.csv')
-	algo = LearningStrategy(algorithm=NeuralNetwork)
+	algo = LearningStrategy(algorithm=kNN)
 	proc_data = algo.learn(data)
 
 
