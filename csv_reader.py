@@ -32,12 +32,14 @@ class kNN:
 		########### TEST findNearestNeighbors FUNCTION #################
 		#trainSet = [[2,2,2,'a'],[4,4,4,'b']]
 		#testInstance = [5,5,5]
-		#neighbors = self.findNearestNeighbors(self.trainingData,self.testingData[0],1)
-		#print(neighbors)
+		#neighbors = self.findNearestNeighbors(trainSet,testInstance,1,1)
+		neighbors = self.findNearestNeighbors(self.trainingData,self.testingData[0],0,5) #the last parameter should always be odd to avoid tie votes when it comes to prediction
+		#print(self.testingData[0])
+		print(neighbors)
 
 		########## TEST getPrediction FUNCTION #########################
-		#prediction = self.getPrediction(neighbors)
-		#print(prediction)
+		prediction = self.getPrediction(neighbors)
+		print(prediction)
 
 	def processData(self,data,split):
 		self.trainingData = np.empty((0,33),int)
@@ -63,11 +65,31 @@ class kNN:
 			distance += np.power((n1[x] - n2[x]),2)
 		return np.square(distance)
 
-	def findNearestNeighbors(self,trainingData,testingData,k):
-		pass
+	def findNearestNeighbors(self,trainingDataSet,testingData,lastRow,k):
+		distances = []
+		length = len(testingData)-lastRow
+
+		for x in range(len(trainingDataSet)):
+			dist = self.euclideanDistance(testingData, trainingDataSet[x], length)
+			distances.append((trainingDataSet[x], dist))
+
+		distances.sort(key=operator.itemgetter(1))
+		neighbors = []
+
+		for x in range(k):
+			neighbors.append(distances[x][0])
+		return neighbors
 
 	def getPrediction(self,neighbors):
-		pass
+		sumOfG3 = 0
+		prediction = 0
+
+		for x in range(len(neighbors)):
+			response = neighbors[x][-1] #get the last item in the list (in our case the value for G3)
+			sumOfG3 += response
+
+		prediction = sumOfG3/len(neighbors)
+		return prediction
 
 class NeuralNetwork:
 	def learn(self,data):
