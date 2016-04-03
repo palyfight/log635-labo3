@@ -52,7 +52,7 @@ class kNN:
 				out = int(element.pop("G3",None)) #remove the column we want to predict from the test dataset
 				self.testingData = np.append(self.testingData, np.array([Util.interpretData(element)]), axis=0)
 				#self.outputData = np.append(self.outputData,out)
-				
+
 		#normalize training and test data
 		self.trainingData = self.trainingData/self.trainingData.max(axis=0)
 		self.testingData = self.testingData/self.testingData.max(axis=0)
@@ -64,27 +64,10 @@ class kNN:
 		return np.square(distance)
 
 	def findNearestNeighbors(self,trainingData,testingData,k):
-		distances = []
-		length = len(testingData)-1
-		for x in range(len(trainingData)):
-			dist = self.euclideanDistance(testingData, trainingData[x], length)
-			distances.append((trainingData[x], dist))
-		distances.sort(key=operator.itemgetter(1))
-		neighbors = []
-		for x in range(k):
-			neighbors.append(distances[x][0])
-		return neighbors
+		pass
 
 	def getPrediction(self,neighbors):
-		classVotes = {}
-		for x in range(len(neighbors)):
-			response = neighbors[x][-1]
-			if response in classVotes:
-				classVotes[response] += 1
-			else:
-				classVotes[response] = 1
-		sortedVotes = sorted(classVotes.items(), key=operator.itemgetter(1), reverse=True)
-		return sortedVotes[0][0]
+		pass
 
 class NeuralNetwork:
 	def learn(self,data):
