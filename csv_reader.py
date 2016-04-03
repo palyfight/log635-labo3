@@ -1,5 +1,7 @@
 from Utils import Util
 import math
+import random
+import operator
 import numpy as np
 
 class LearningStrategy:
@@ -14,6 +16,80 @@ class LearningStrategy:
 class Greedy:
 	def learn(self,data):
 		return data
+
+class kNN:
+	def learn(self,data):
+		self.processData(data,0.67)
+		
+		######### TEST processData FUNCTION ###########################
+		#print(repr(len(self.trainingData)))
+		#print(repr(len(self.testingData)))
+		
+		########## TEST euclideanDistance FUNCTION ####################
+		#distance = self.euclideanDistance(self.trainingData[0],self.trainingData[1],32)
+		#print("Distance: " + repr(distance))
+
+		########### TEST findNearestNeighbors FUNCTION #################
+		#trainSet = [[2,2,2,'a'],[4,4,4,'b']]
+		#testInstance = [5,5,5]
+		#neighbors = self.findNearestNeighbors(trainSet,testInstance,1,1)
+		neighbors = self.findNearestNeighbors(self.trainingData,self.testingData[0],0,5) #the last parameter should always be odd to avoid tie votes when it comes to prediction
+		#print(self.testingData[0])
+		print(neighbors)
+
+		########## TEST getPrediction FUNCTION #########################
+		prediction = self.getPrediction(neighbors)
+		print(prediction)
+
+	def processData(self,data,split):
+		self.trainingData = np.empty((0,33),int)
+		self.testingData = np.empty((0,32),int)
+		#self.outputData = np.empty((0,len(data)),int)
+
+		#split the data randomly into training and test datasets
+		for element in data:
+			if random.random() < split:
+				self.trainingData = np.append(self.trainingData, np.array([Util.interpretData(element)]), axis=0)
+			else:
+				out = int(element.pop("G3",None)) #remove the column we want to predict from the test dataset
+				self.testingData = np.append(self.testingData, np.array([Util.interpretData(element)]), axis=0)
+				#self.outputData = np.append(self.outputData,out)
+
+		#normalize training and test data
+		self.trainingData = self.trainingData/self.trainingData.max(axis=0)
+		self.testingData = self.testingData/self.testingData.max(axis=0)
+
+	def euclideanDistance(self,n1,n2,length):
+		distance = 0
+		for x in range(length):
+			distance += np.power((n1[x] - n2[x]),2)
+		return np.square(distance)
+
+	def findNearestNeighbors(self,trainingDataSet,testingData,lastRow,k):
+		distances = []
+		length = len(testingData)-lastRow
+
+		for x in range(len(trainingDataSet)):
+			dist = self.euclideanDistance(testingData, trainingDataSet[x], length)
+			distances.append((trainingDataSet[x], dist))
+
+		distances.sort(key=operator.itemgetter(1))
+		neighbors = []
+
+		for x in range(k):
+			neighbors.append(distances[x][0])
+		return neighbors
+
+	def getPrediction(self,neighbors):
+		sumOfG3 = 0
+		prediction = 0
+
+		for x in range(len(neighbors)):
+			response = neighbors[x][-1] #get the last item in the list (in our case the value for G3)
+			sumOfG3 += response
+
+		prediction = sumOfG3/len(neighbors)
+		return prediction
 
 class NeuralNetwork:
 	def learn(self,data):
@@ -111,7 +187,7 @@ class Genetics:
 
 def main():
 	data = Util.readInterpretData('learning_dataset.csv')
-	algo = LearningStrategy(algorithm=NeuralNetwork)
+	algo = LearningStrategy(algorithm=kNN)
 	proc_data = algo.learn(data)
 
 
