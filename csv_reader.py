@@ -1,4 +1,5 @@
 from Utils import Util
+from Calculator import *
 import math
 import random
 import operator
@@ -56,7 +57,7 @@ class kNN:
 				#self.outputData = np.append(self.outputData,out)
 
 		#normalize training and test data
-		self.trainingData = self.trainingData/self.trainingData.max(axis=0)
+		#self.trainingData = self.trainingData/self.trainingData.max(axis=0)
 		self.testingData = self.testingData/self.testingData.max(axis=0)
 
 	def euclideanDistance(self,n1,n2,length):
@@ -98,14 +99,14 @@ class NeuralNetwork:
 		connection = (2*np.random.random((len(self.inputData[0]),1))) - 1
 		#print(connection)
 		
-		for i in range(10000):
+		for i in range(1):
 			layer0 = self.inputData
 			layer1 = self.nonLinear( np.dot(layer0,connection) )
 			layer1_errors = self.outputData - layer1
 			layer1_delta = layer1_errors * self.nonLinear(layer1,True)
 			connection += np.dot(layer0.T, layer1_delta)
 			#print(str(np.mean(np.abs(layer1_errors))))
-		#print(layer1)
+		print(layer1)
 
 	def processData(self,data):
 		self.inputData = np.empty((0,32),int)
@@ -118,12 +119,9 @@ class NeuralNetwork:
 		self.outputData = np.array([self.outputData]).T
 
 		#normalize input output
-		print(self.inputData.max(axis=0))
-		print(self.inputData.min(axis=0))
 		self.inputData = self.inputData/self.inputData.max(axis=0)
 		self.outputData = self.outputData/self.outputData.max(axis=0)
-		print(self.inputData)
-		print(self.outputData)
+
 		'''self.inputData = np.array([[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
 								   [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
 								   [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]])
@@ -140,8 +138,6 @@ class NeuralNetwork:
 		'''if derivate == True:
 			return -2*output*np.exp(np.power(-output,2))
 		return np.exp(np.power(-output,2))'''
-
-
 
 class Genetics:
 	def learn(self,data):
@@ -185,23 +181,89 @@ class Genetics:
 		def getFitness(self):
 			pass
 
+class BayesNaive:
+	def learn(self,data):
+		self.processData(data,33)
+
+	def processData(self,data,attributeCount):
+		dataset = np.empty((0,attributeCount),int)
+		
+		for element in data:	
+			#making sure G3 is the last element
+			out =  int(element.pop("G3",None))
+			temp = Util.interpretData(element)
+			temp.append(out)
+			
+			dataset = np.append(dataset, [np.array(temp)], axis=0)
+
+		trainSet, testSet = Util.splitDataset(dataset, 0.75)
+		model = self.summarizeClass(trainSet)
+		results = self.getPredictions(model,testSet)
+		confidence = self.getAccuracy(testSet,results)
+		print(results)
+		print(confidence)
+
+	def separateByClass(self,dataset):
+		classes = {}
+		for data in dataset:
+			if(data[-1] not in classes):
+				classes[data[-1]] = []
+			classes[data[-1]].append(data)
+		return classes
+
+	def summarize(self,dataset):
+		mean = Calculator(formula=Mean)
+		stdev = Calculator(formula=STdev)
+		result = [(mean.calculate(data), stdev.calculate(data)) for data in zip(*dataset)]
+		del result[-1]
+		return result
+
+	def summarizeClass(self,dataset):
+		classes = self.separateByClass(dataset)
+		results = {}
+		for index, data in classes.items():
+			results[index] = self.summarize(data)
+		return results
+
+	def classesProbabilities(self,summaries, input):
+		probs = {}
+		gaus = Calculator(formula=Gaussian)
+		for index,values in summaries.items():
+			probs[index] = 1
+			for i in range(len(values)):
+				mean, stdev = values[i]
+				x = input[i]
+				probs[index] *= gaus.calculate([x, mean, stdev])
+		return probs
+
+	def predict(self,summaries, inputs):
+		probs = self.classesProbabilities(summaries,inputs)
+		bestMatch = None
+		matchProb = -1
+		for index, value in probs.items():
+			if bestMatch is None or value > matchProb:
+				matchProb = value
+				bestMatch = index
+		return bestMatch
+
+	def getPredictions(self,summaries,inputs):
+		results = []
+		for item in inputs:
+			result = self.predict(summaries,item)
+			results.append(result)
+		return results
+
+	def getAccuracy(self,test,predictions):
+		correct = 0
+		for index in range(len(test)):
+			if test[index][-1] == predictions[index]:
+				correct += 1
+		return (correct/len(test))*100
+
+
 def main():
 	data = Util.readInterpretData('learning_dataset.csv')
-	algo = LearningStrategy(algorithm=kNN)
+	algo = LearningStrategy(algorithm=BayesNaive)
 	proc_data = algo.learn(data)
-
-
-	'''trainingSetLimit = math.floor(len(data)*0.8)
-
-	for index in range(len(data)):
-		print(Util.dataBitConverter(data[index]))
-
-	for index in range(len(data)) :
-		chromosome = Util.bitConverter(data[index])
-		if len(chromosome) == 80 :
-			if index <= trainingSetLimit:
-				Util.writeToLearningFile("validation.pac", chromosome)
-			else:
-				Util.writeToLearningFile("learning.pac",chromosome)'''
 
 if __name__ == "__main__":main()
