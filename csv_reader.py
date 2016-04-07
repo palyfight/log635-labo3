@@ -33,18 +33,18 @@ class kNN:
 		#trainSet = [[2,2,2,'a'],[4,4,4,'b']]
 		#testInstance = [5,5,5]
 		#neighbors = self.findNearestNeighbors(trainSet,testInstance,1,1)
-		neighbors = self.findNearestNeighbors(self.trainingData,self.testingData[0],0,5) #the last parameter should always be odd to avoid tie votes when it comes to prediction
+		neighbors = self.findNearestNeighbors(0,1) #the last parameter should always be odd to avoid tie votes when it comes to prediction
 		#print(self.testingData[0])
-		print(neighbors)
+		#print(neighbors)
 
 		########## TEST getPrediction FUNCTION #########################
-		prediction = self.getPrediction(neighbors)
-		print(prediction)
+		#predictions = self.getPrediction(neighbors)
+		#print(predictions)
 
 	def processData(self,data,split):
 		self.trainingData = np.empty((0,33),int)
 		self.testingData = np.empty((0,32),int)
-		#self.outputData = np.empty((0,len(data)),int)
+		self.outputData = np.empty((0,len(data)),int)
 
 		#split the data randomly into training and test datasets
 		for element in data:
@@ -53,11 +53,13 @@ class kNN:
 			else:
 				out = int(element.pop("G3",None)) #remove the column we want to predict from the test dataset
 				self.testingData = np.append(self.testingData, np.array([Util.interpretData(element)]), axis=0)
-				#self.outputData = np.append(self.outputData,out)
+				self.outputData = np.append(self.outputData,out)
 
 		#normalize training and test data
 		self.trainingData = self.trainingData/self.trainingData.max(axis=0)
 		self.testingData = self.testingData/self.testingData.max(axis=0)
+		self.outputData = self.outputData/self.outputData.max(axis=0)
+		#print(self.outputData)
 
 	def euclideanDistance(self,n1,n2,length):
 		distance = 0
@@ -65,20 +67,36 @@ class kNN:
 			distance += np.power((n1[x] - n2[x]),2)
 		return np.square(distance)
 
-	def findNearestNeighbors(self,trainingDataSet,testingData,lastRow,k):
+	def findNearestNeighbors(self,lastRow,k):
 		distances = []
-		length = len(testingData)-lastRow
 
-		for x in range(len(trainingDataSet)):
-			dist = self.euclideanDistance(testingData, trainingDataSet[x], length)
-			distances.append((trainingDataSet[x], dist))
+		#print(testingData)
+		#print(str(len(testingData)))
+
+		for x in range(len(self.testingData)):
+			length = len(self.testingData[x])-lastRow
+			#print(length)
+			for y in range(len(self.trainingData)):
+				dist = self.euclideanDistance(self.testingData[x], self.trainingData[y], length)
+				distances.append((self.trainingData[y], dist))
 
 		distances.sort(key=operator.itemgetter(1))
-		neighbors = []
+		print(distances[0])
+		#print(str(len(distances)))
 
-		for x in range(k):
-			neighbors.append(distances[x][0])
+		neighbors = {}
+
+		for x in range(len(self.testingData)):	
+			for y in range(k):
+				#print('x: ' + str(x) + " y: " + str(y))
+				neighbors[x,y] = distances[x][y]
+				#neighbors.append(distances[x][0])
+
+		#print(neighbors)
 		return neighbors
+
+		#for x in range(len(testingData)):
+
 
 	def getPrediction(self,neighbors):
 		sumOfG3 = 0
@@ -90,6 +108,13 @@ class kNN:
 
 		prediction = sumOfG3/len(neighbors)
 		return prediction
+
+	def evaluateAccuracy(self,predictions):
+		accurate = 0
+		for x in range(len(self.testingData)):
+			if self.testingData[x][-1] is predictions[x]:
+				accurate +=1
+		return (correct/float(len(self.testingData)))*100
 
 class NeuralNetwork:
 	def learn(self,data):
