@@ -1,5 +1,6 @@
 from Utils import Util
 from Calculator import *
+from itertools import combinations
 import math
 import random
 import operator
@@ -10,59 +11,66 @@ class LearningStrategy:
 		if(algorithm):
 			self.algorithm = algorithm()
 
-	def learn(self,data):
+	def learn(self,data, dataEvaluation, heuristicStrategy=None, attributeCount=33):
 		if(self.algorithm):
-			return self.algorithm.learn(data)
+			return self.algorithm.learn(data,dataEvaluation,heuristicStrategy,attributeCount)
 
-class Greedy:
-	def learn(self,data):
-		return data
+	def getAccuracy(self,test,prediction):
+		if(self.algorithm):
+			return self.algorithm.getAccuracy(test,prediction)
 
+	def showResult(self):
+		if(self.algorithm):
+			return self.algorithm.showResult()
+
+
+
+##################################################################################################
+########################################## kNN ###################################################
+##################################################################################################
 class kNN:
-	def learn(self,data):
-		self.processData(data,0.67)
-		
-		######### TEST processData FUNCTION ###########################
-		#print(repr(len(self.trainingData)))
-		#print(repr(len(self.testingData)))
-		
-		########## TEST euclideanDistance FUNCTION ####################
-		#distance = self.euclideanDistance(self.trainingData[0],self.trainingData[1],32)
-		#print("Distance: " + repr(distance))
+	def learn(self,data,dataEvaluation,heuristicStrategy,attributeCount):
+		self.processData(data,0.67,attributeCount)
+	#def learn(self,data,dataEvaluation,heuristicStrategy,attributeCount):
+	#	model = self.processData(data,attributeCount)
+	#	self.evaluate(model,dataEvaluation,attributeCount)
+	#	return [self.testSet,self.predictions]
 
-		########### TEST findNearestNeighbors FUNCTION #################
-		#trainSet = [[2,2,2,'a'],[4,4,4,'b']]
-		#testInstance = [5,5,5]
-		#neighbors = self.findNearestNeighbors(trainSet,testInstance,1,1)
-		neighbors = self.findNearestNeighbors(self.trainingData,self.testingData[0],0,5) #the last parameter should always be odd to avoid tie votes when it comes to prediction
-		#print(self.testingData[0])
-		print(neighbors)
+		self.predictions = self.getAllPredictions(self.trainingData,self.testingData)
+		self.accuracy = self.getAccuracy(self.testingData, self.predictions)
 
-		########## TEST getPrediction FUNCTION #########################
-		prediction = self.getPrediction(neighbors)
-		print(prediction)
+		self.dataEvaluationPredictions = self.evaluate(dataEvaluation,attributeCount)
+		#self.dataEvaluationPredictions = self.getAllPredictions(self.trainingData,dataEvaluation)
+		return [self.testingData, self.predictions]
 
-	def processData(self,data,split):
-		self.trainingData = np.empty((0,33),int)
-		self.testingData = np.empty((0,32),int)
-		#self.outputData = np.empty((0,len(data)),int)
+	def evaluate(self,dataEvaluation,attributeCount):
+		attributesCount = attributeCount-1
+		dataset = np.empty((0,attributesCount),int)
+		for element in dataEvaluation:
+			temp = Util.interpretData(element)
+			dataset = np.append(dataset, [np.array(temp)], axis=0)
+
+		evaluation = self.getAllPredictions(self.trainingData,dataset)
+		return evaluation
+
+	def processData(self,data,split,attributeCount):
+		datasets = np.empty((0,attributeCount),int)
 
 		#split the data randomly into training and test datasets
 		for element in data:
-			if random.random() < split:
-				self.trainingData = np.append(self.trainingData, np.array([Util.interpretData(element)]), axis=0)
-			else:
-				out = int(element.pop("G3",None)) #remove the column we want to predict from the test dataset
-				self.testingData = np.append(self.testingData, np.array([Util.interpretData(element)]), axis=0)
-				#self.outputData = np.append(self.outputData,out)
+			out = int(element.pop("G3",None)) #remove the column we want to predict from the test dataset
+			temp = Util.interpretData(element)
+			temp.append(out)
 
-		#normalize training and test data
-		#self.trainingData = self.trainingData/self.trainingData.max(axis=0)
-		self.testingData = self.testingData/self.testingData.max(axis=0)
+			datasets = np.append(datasets, [np.array(temp)], axis=0)
+
+		self.trainingData,self.testingData = Util.splitDataset(datasets, split)
 
 	def euclideanDistance(self,n1,n2,length):
 		distance = 0
 		for x in range(length):
+
+			
 			distance += np.power((n1[x] - n2[x]),2)
 		return np.square(distance)
 
@@ -86,104 +94,199 @@ class kNN:
 		prediction = 0
 
 		for x in range(len(neighbors)):
-			response = neighbors[x][-1] #get the last item in the list (in our case the value for G3)
+			response = neighbors[x][-1] 
 			sumOfG3 += response
 
 		prediction = sumOfG3/len(neighbors)
 		return prediction
 
-class NeuralNetwork:
-	def learn(self,data):
-		self.processData(data)
-		np.random.seed(1)
-		connection = (2*np.random.random((len(self.inputData[0]),1))) - 1
-		#print(connection)
-		
-		for i in range(1):
-			layer0 = self.inputData
-			layer1 = self.nonLinear( np.dot(layer0,connection) )
-			layer1_errors = self.outputData - layer1
-			layer1_delta = layer1_errors * self.nonLinear(layer1,True)
-			connection += np.dot(layer0.T, layer1_delta)
-			#print(str(np.mean(np.abs(layer1_errors))))
-		print(layer1)
+	def getAllPredictions(self,trainData,testData):
+		predictions = []
+		for x in range(len(testData)):
+			neighbors = self.findNearestNeighbors(trainData,testData[x],1,5)
+			#print(neighbors)
+			predictions.append(self.getPrediction(neighbors))
+		return np.ceil(predictions)
 
-	def processData(self,data):
-		self.inputData = np.empty((0,32),int)
-		self.outputData = np.empty((0,len(data)),int)
-		for element in data:
-			out = int(element.pop("G3",None))
-			self.inputData = np.append(self.inputData, np.array([Util.interpretData(element)]), axis=0)
-			self.outputData = np.append(self.outputData,out)
+	def getAccuracy(self, testDataSet, predictions):
+		accurate = 0
+		for x in range(len(testDataSet)):
+			if testDataSet[x][-1] == predictions[x]:
+				accurate += 1
+		return (accurate/float(len(testDataSet))) * 100.0
 
-		self.outputData = np.array([self.outputData]).T
+	def showResult(self):
+		print("Confiance " + str(self.accuracy))
+		print(self.dataEvaluationPredictions)	
 
-		#normalize input output
-		self.inputData = self.inputData/self.inputData.max(axis=0)
-		self.outputData = self.outputData/self.outputData.max(axis=0)
-
-		'''self.inputData = np.array([[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-								   [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-								   [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]])
-		self.outputData = np.array([[1,0,1]]).T'''
-
-	def nonLinear(self,output,derivate=False):
-		#print(output)
-		'''if derivate == True:
-			return output*(1-output)
-		return 1/(1+np.exp(-output))'''
-		if derivate == True:
-			return (1-np.power(np.tanh(output),2))
-		return np.tanh(output)
-		'''if derivate == True:
-			return -2*output*np.exp(np.power(-output,2))
-		return np.exp(np.power(-output,2))'''
-
+##################################################################################################
+################################### GENETIC ALGORITHM ############################################
+##################################################################################################
 class Genetics:
-	def learn(self,data):
-		return data
+	def learn(self,data,dataEvaluation,heuristicStrategy,attributeCount):
+		self.xmenRate = 0.095
+		self.gladiator = 7
+		self.genesPool = data[0].keys()
+		population = Population(50,data,dataEvaluation,True,heuristicStrategy)
+		winner = population.getFittest()
+		#population.getFittest()
+		
+		generationCount = 0
+		while(winner.performance() < 60):
+			print("Generation " + str(generationCount) + " Confiance " + str(winner.performance()) + " attributes " + str(winner.getGenome()) )
+			winner.showResult()
+			generationCount +=1
+			population = self.nextGeneration(population,data,dataEvaluation,heuristicStrategy,attributeCount)
+			winner = population.getFittest()
 
-	class _Population:
-		def __init__(self,chromosomes):
-			self.individuals = []
-			for element in data:
-				individual = _Individual(element)
-				self.individuals.append(individual)
 
-		def getIndividual(self,index):
-			return self.individuals[index]
+	def nextGeneration(self,population,data,dataEvaluation,heuristicStrategy,attributeCount):
+		nextGen = Population(1+(population.size()*2),data,dataEvaluation,False,heuristicStrategy)
+		nextGen.saveIndividuals(0,population.getFittest())
+		count = 1
+		for index in range(population.size()):
+			challenger = self.tournament(population,data,dataEvaluation,heuristicStrategy,attributeCount)
+			champion   = self.tournament(population,data,dataEvaluation,heuristicStrategy,attributeCount)
+			nextGenChallenger, nextGenChamp = self.crossover(challenger,champion,int(np.floor(challenger.size()/2)),heuristicStrategy)
+			nextGen.saveIndividuals(count, nextGenChamp)
+			nextGen.saveIndividuals(count+1, nextGenChallenger)
+			count += 2
 
-		def getFittess(self):
-			fittess = self.individuals[0]
-			for element in self.individuals:
-				if fittess.getFitness <= element.getFitness:
-					fittess = element
+		for index in range(nextGen.size()):
+			neo = self.xmen(nextGen.getIndividual(index))
+			nextGen.saveIndividuals(index,neo)
+		return nextGen
 
-			return fittess
+	def tournament(self,population,data,dataEvaluation,heuristicStrategy,attributeCount):
+		gladiators = Population(self.gladiator,data,dataEvaluation,False,heuristicStrategy)
+		for index in range(self.gladiator):
+			chosenOne = random.randint(0,population.size()-1)
+			gladiators.saveIndividuals(index,population.getIndividual(chosenOne))
+		morpheus = gladiators.getFittest()
+		return morpheus
 
-		def size(self):
-			return len(self.individuals)
+	def crossover(self, individu1, individu2, mergingPoint,heuristicStrategy):
+		newGenome = []
+		newGenome2 = []
+		newGenome.extend(individu1.getGenome()[:mergingPoint])
+		newGenome2.extend(individu2.getGenome()[:mergingPoint])
+		newGenome.extend(individu2.getGenome()[mergingPoint:len(individu2.getGenome())])
+		newGenome2.extend(individu1.getGenome()[mergingPoint:len(individu1.getGenome())])
 
-		def saveIndividual(self,index,individual):
-			self.individuals[index] = individual
+		newIndividu1 = Individual(newGenome,heuristicStrategy)
+		newIndividu2 = Individual(newGenome2,heuristicStrategy)
 
-	class _Individual:
-		def __init__(self,chromosome):
-			self.fitness = 0
-			self.genes = chromosome
+		return [newIndividu1, newIndividu2]
 
-		def getGene(self, index):
-			return self.genes[index]
+	def xmen(self, individu):
+		np.random.seed(1)
+		genes = [gene for gene in self.genesPool if gene not in individu.getGenome()]
+		if random.uniform(0,1) <= self.xmenRate:
+			randomKey = random.choice(genes)
+			individu.addGene(randomKey)
+		return individu
 
-		def size(self):
-			return len(self.genes)
+class Population:
+	def __init__(self, size, data,dataEvaluation, init = False, heuristicStrategy=None):
+		self.individuals = np.empty(size,dtype=Individual)
+		self.data = data
+		self.dataEvaluation = dataEvaluation
+		if init == True:
+			genomes = self.generateGenomes(data[0].keys(),size)
+			for index in range(len(genomes)):
+				individual = Individual(genomes[index],heuristicStrategy)
+				self.individuals[index] = individual
 
-		def getFitness(self):
-			pass
+	def getIndividual(self,index):
+		return self.individuals[index]
 
+	def getFittest(self):
+		fittest = self.individuals[0]
+		for individual in self.individuals:
+			fitness = individual.getFitness(self.data,self.dataEvaluation)
+			if fitness > fittest.getFitness(self.data,self.dataEvaluation):
+				fittest = individual
+		return fittest
+
+	def size(self):
+		return len(self.individuals)
+
+	def saveIndividuals(self,index,individual):
+		self.individuals[index] = individual
+
+	def generateGenomes(self,data,limit):
+		data = list(data)
+		data.remove("G3")
+		combination = list(combinations(data,2))
+		#np.random.seed(5)
+		while len(combination) > limit:
+			rand = random.randint(0,len(combination)-1)
+			combination.pop(rand)
+		return combination
+
+class Individual:
+	def __init__(self, gene, heuristicStrategy=None):
+		self.gene = list(gene)
+		self.heuristicStrategy = heuristicStrategy
+
+	def filterData(self, data):
+		dataset = []
+		for row in data:				
+			filters = {}
+			for index in self.gene:
+				if(index not in filters):
+					filters[index] = row[index]
+			filters["G3"] = row["G3"]
+			dataset.append(filters)
+		return dataset
+
+	def filterEvaluation(self, data):
+		dataset = []
+		for row in data:
+			filters = {}
+			for index in self.gene:
+				if(index not in filters and index != 'G3'):
+					filters[index] = row[index]
+			dataset.append(filters)
+		return dataset
+
+	def getFitness(self,data,dataEvaluation):
+		dataset = self.filterData(data)
+		dataEvaluation = self.filterEvaluation(dataEvaluation)
+		test,prediction = self.heuristicStrategy.learn(dataset,dataEvaluation,attributeCount=len(dataset[0].keys()))
+		self.fitness = self.heuristicStrategy.getAccuracy(test,prediction)
+		return self.fitness
+
+	def performance(self):
+		return self.fitness
+
+	def size(self):
+		return len(self.gene)
+
+	def setGene(self,value):
+		self.gene = value
+
+	def addGene(self,value):
+		self.gene.append(value)
+
+	def getGene(self, index):
+		return self.gene[index]
+
+	def getGenome(self):
+		return self.gene
+
+	def showResult(self):
+		self.heuristicStrategy.showResult()
+
+##################################################################################################
+####################################### BAYES NAIF ###############################################
+##################################################################################################
 class BayesNaive:
-	def learn(self,data):
-		self.processData(data,33)
+	def learn(self,data,dataEvaluation,heuristicStrategy,attributeCount):
+		model = self.processData(data,attributeCount)
+		self.evaluate(model,dataEvaluation,attributeCount)
+		return [self.testSet,self.predictions]
+
 
 	def processData(self,data,attributeCount):
 		dataset = np.empty((0,attributeCount),int)
@@ -196,12 +299,25 @@ class BayesNaive:
 			
 			dataset = np.append(dataset, [np.array(temp)], axis=0)
 
-		trainSet, testSet = Util.splitDataset(dataset, 0.75)
-		model = self.summarizeClass(trainSet)
-		results = self.getPredictions(model,testSet)
-		confidence = self.getAccuracy(testSet,results)
-		print(results)
-		print(confidence)
+		self.trainSet, self.testSet = Util.splitDataset(dataset, 0.67)
+		model = self.summarizeClass(self.trainSet)
+		results = self.getPredictions(model,self.testSet)
+		self.predictions = results
+		self.confidence = self.getAccuracy(self.testSet,results)
+		return model
+
+	def evaluate(self,model,dataEvaluation,attributeCount):
+		attributesCount = attributeCount-1
+		dataset = np.empty((0,attributesCount),int)
+		for element in dataEvaluation:
+			temp = Util.interpretData(element)
+			dataset = np.append(dataset, [np.array(temp)], axis=0)
+
+		self.evaluation = self.getPredictions(model,dataset)
+
+	def showResult(self):
+		print("Confiance " + str(self.confidence))
+		print(self.evaluation)
 
 	def separateByClass(self,dataset):
 		classes = {}
@@ -261,9 +377,28 @@ class BayesNaive:
 		return (correct/len(test))*100
 
 
+##################################################################################################
+########################################## MAIN###################################################
+##################################################################################################
 def main():
 	data = Util.readInterpretData('learning_dataset.csv')
-	algo = LearningStrategy(algorithm=BayesNaive)
-	proc_data = algo.learn(data)
+	data2 = Util.readInterpretData('learning_dataset.csv')
+	evaluation = Util.readInterpretData("evaluations.csv")
+	#Genetic
+	algo = LearningStrategy(algorithm=Genetics)
+	gen_data = algo.learn(data,evaluation,LearningStrategy(algorithm=kNN))	
+	#gen_data = algo.learn(data,LearningStrategy(algorithm=kNN))
+
+
+	#Bayes
+	#algo = LearningStrategy(algorithm=BayesNaive)
+	#bayes_data = algo.learn(data,evaluation)
+	#algo.showResult()
+
+	#kNN
+	#algo = LearningStrategy(algorithm=kNN)
+	#knn_data = algo.learn(data2)
+	#algo.showResult()
+
 
 if __name__ == "__main__":main()

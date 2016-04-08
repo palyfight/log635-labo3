@@ -1,6 +1,7 @@
 class LOG635DATA:
 
 	def intToBits(self, value, length):
+		value = value if value else 0
 		return bin(int(value))[2:].zfill(length)
 
 	def yesno(self, value):
