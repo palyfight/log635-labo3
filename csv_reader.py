@@ -381,12 +381,12 @@ class BayesNaive:
 ########################################## MAIN###################################################
 ##################################################################################################
 def main():
-	data = Util.readInterpretData('learning_dataset.csv')
-	data2 = Util.readInterpretData('learning_dataset.csv')
-	evaluation = Util.readInterpretData("evaluations.csv")
+	data = Util.readInterpretData('evaluation-dataset.csv')
+	data2 = Util.readInterpretData('evaluation-dataset.csv')
+	evaluation = Util.readInterpretData("evaluation-evaluation.csv")
 	#Genetic
-	algo = LearningStrategy(algorithm=Genetics)
-	gen_data = algo.learn(data,evaluation,LearningStrategy(algorithm=kNN))	
+	#algo = LearningStrategy(algorithm=Genetics)
+	#gen_data = algo.learn(data,evaluation,LearningStrategy(algorithm=BayesNaive))	
 	#gen_data = algo.learn(data,LearningStrategy(algorithm=kNN))
 
 
@@ -396,9 +396,9 @@ def main():
 	#algo.showResult()
 
 	#kNN
-	#algo = LearningStrategy(algorithm=kNN)
-	#knn_data = algo.learn(data2)
-	#algo.showResult()
+	algo = LearningStrategy(algorithm=kNN)
+	knn_data = algo.learn(data2,evaluation)
+	algo.showResult()
 
 
 if __name__ == "__main__":main()
