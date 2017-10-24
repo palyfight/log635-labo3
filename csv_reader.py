@@ -1,27 +1,11 @@
 from Utils import Util
 from Calculator import *
 from itertools import combinations
+from learningstrategy import LearningStrategy
 import math
 import random
 import operator
 import numpy as np
-
-class LearningStrategy:
-	def __init__(self, algorithm=None):
-		if(algorithm):
-			self.algorithm = algorithm()
-
-	def learn(self,data, dataEvaluation, heuristicStrategy=None, attributeCount=33):
-		if(self.algorithm):
-			return self.algorithm.learn(data,dataEvaluation,heuristicStrategy,attributeCount)
-
-	def getAccuracy(self,test,prediction):
-		if(self.algorithm):
-			return self.algorithm.getAccuracy(test,prediction)
-
-	def showResult(self):
-		if(self.algorithm):
-			return self.algorithm.showResult()
 
 
 
@@ -70,7 +54,7 @@ class kNN:
 		distance = 0
 		for x in range(length):
 
-			
+
 			distance += np.power((n1[x] - n2[x]),2)
 		return np.square(distance)
 
@@ -94,7 +78,7 @@ class kNN:
 		prediction = 0
 
 		for x in range(len(neighbors)):
-			response = neighbors[x][-1] 
+			response = neighbors[x][-1]
 			sumOfG3 += response
 
 		prediction = sumOfG3/len(neighbors)
@@ -117,7 +101,7 @@ class kNN:
 
 	def showResult(self):
 		print("Confiance " + str(self.accuracy))
-		print(self.dataEvaluationPredictions)	
+		print(self.dataEvaluationPredictions)
 
 ##################################################################################################
 ################################### GENETIC ALGORITHM ############################################
@@ -130,7 +114,7 @@ class Genetics:
 		population = Population(50,data,dataEvaluation,True,heuristicStrategy)
 		winner = population.getFittest()
 		#population.getFittest()
-		
+
 		generationCount = 0
 		while(winner.performance() < 60):
 			print("Generation " + str(generationCount) + " Confiance " + str(winner.performance()) + " attributes " + str(winner.getGenome()) )
@@ -231,7 +215,7 @@ class Individual:
 
 	def filterData(self, data):
 		dataset = []
-		for row in data:				
+		for row in data:
 			filters = {}
 			for index in self.gene:
 				if(index not in filters):
@@ -290,13 +274,13 @@ class BayesNaive:
 
 	def processData(self,data,attributeCount):
 		dataset = np.empty((0,attributeCount),int)
-		
-		for element in data:	
+
+		for element in data:
 			#making sure G3 is the last element
 			out =  int(element.pop("G3",None))
 			temp = Util.interpretData(element)
 			temp.append(out)
-			
+
 			dataset = np.append(dataset, [np.array(temp)], axis=0)
 
 		self.trainSet, self.testSet = Util.splitDataset(dataset, 0.67)
@@ -386,7 +370,7 @@ def main():
 	evaluation = Util.readInterpretData("evaluation-evaluation.csv")
 	#Genetic
 	#algo = LearningStrategy(algorithm=Genetics)
-	#gen_data = algo.learn(data,evaluation,LearningStrategy(algorithm=BayesNaive))	
+	#gen_data = algo.learn(data,evaluation,LearningStrategy(algorithm=BayesNaive))
 	#gen_data = algo.learn(data,LearningStrategy(algorithm=kNN))
 
 
