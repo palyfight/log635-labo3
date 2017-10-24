@@ -1,6 +1,5 @@
 from Calculator import *
 from itertools import combinations
-from learningstrategy import LearningStrategy
 import math
 import random
 import operator
