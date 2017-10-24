@@ -1,5 +1,7 @@
 from Calculator import *
 from itertools import combinations
+from population import Population
+from individual import Individual
 import math
 import random
 import operator

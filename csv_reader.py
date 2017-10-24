@@ -3,107 +3,11 @@ from Calculator import *
 from itertools import combinations
 from learningstrategy import LearningStrategy
 from knn import kNN
+from geneticalgorithm import Genetics
 import math
 import random
 import operator
 import numpy as np
-
-
-
-
-
-
-class Population:
-	def __init__(self, size, data,dataEvaluation, init = False, heuristicStrategy=None):
-		self.individuals = np.empty(size,dtype=Individual)
-		self.data = data
-		self.dataEvaluation = dataEvaluation
-		if init == True:
-			genomes = self.generateGenomes(data[0].keys(),size)
-			for index in range(len(genomes)):
-				individual = Individual(genomes[index],heuristicStrategy)
-				self.individuals[index] = individual
-
-	def getIndividual(self,index):
-		return self.individuals[index]
-
-	def getFittest(self):
-		fittest = self.individuals[0]
-		for individual in self.individuals:
-			fitness = individual.getFitness(self.data,self.dataEvaluation)
-			if fitness > fittest.getFitness(self.data,self.dataEvaluation):
-				fittest = individual
-		return fittest
-
-	def size(self):
-		return len(self.individuals)
-
-	def saveIndividuals(self,index,individual):
-		self.individuals[index] = individual
-
-	def generateGenomes(self,data,limit):
-		data = list(data)
-		data.remove("G3")
-		combination = list(combinations(data,2))
-		#np.random.seed(5)
-		while len(combination) > limit:
-			rand = random.randint(0,len(combination)-1)
-			combination.pop(rand)
-		return combination
-
-class Individual:
-	def __init__(self, gene, heuristicStrategy=None):
-		self.gene = list(gene)
-		self.heuristicStrategy = heuristicStrategy
-
-	def filterData(self, data):
-		dataset = []
-		for row in data:
-			filters = {}
-			for index in self.gene:
-				if(index not in filters):
-					filters[index] = row[index]
-			filters["G3"] = row["G3"]
-			dataset.append(filters)
-		return dataset
-
-	def filterEvaluation(self, data):
-		dataset = []
-		for row in data:
-			filters = {}
-			for index in self.gene:
-				if(index not in filters and index != 'G3'):
-					filters[index] = row[index]
-			dataset.append(filters)
-		return dataset
-
-	def getFitness(self,data,dataEvaluation):
-		dataset = self.filterData(data)
-		dataEvaluation = self.filterEvaluation(dataEvaluation)
-		test,prediction = self.heuristicStrategy.learn(dataset,dataEvaluation,attributeCount=len(dataset[0].keys()))
-		self.fitness = self.heuristicStrategy.getAccuracy(test,prediction)
-		return self.fitness
-
-	def performance(self):
-		return self.fitness
-
-	def size(self):
-		return len(self.gene)
-
-	def setGene(self,value):
-		self.gene = value
-
-	def addGene(self,value):
-		self.gene.append(value)
-
-	def getGene(self, index):
-		return self.gene[index]
-
-	def getGenome(self):
-		return self.gene
-
-	def showResult(self):
-		self.heuristicStrategy.showResult()
 
 ##################################################################################################
 ####################################### BAYES NAIF ###############################################
